@@ -9,6 +9,7 @@ class News(models.Model):
     description = models.CharField(max_length=400, verbose_name="Description")
     link = models.CharField(max_length=400, verbose_name="Link")
     image = models.ImageField(blank=True, null=True, verbose_name="Image")
+    posted_on = models.CharField(max_length=50)
 
     def __str__(self):
         return self.news_title

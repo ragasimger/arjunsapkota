@@ -24,7 +24,6 @@ class Category(models.Model):
         return reverse("category", kwargs={'slug' : self.slug})
 
 class Post(models.Model):
-    id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=160, default='', null=False)
     category = models.ForeignKey(Category, default=None, on_delete=models.CASCADE)
     content = models.TextField(default="")
