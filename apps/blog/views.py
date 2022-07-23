@@ -40,16 +40,20 @@ def article_detail(request, cat_slug=None, slug=None):
 
         raise Http404
 
-    category = Category.objects.all()[:10]
-
-    count = Category.objects.filter(draft=False).annotate(
-        post_count=Count('post', filter=Q(post__draft=False))
-    )
-    blog = Post.objects.filter(draft=False).order_by('created_date').exclude(id=post.id)[:4]
-    category = zip(category,count)
+    blog = Post.objects.filter(draft=False).order_by('created_date').exclude(id=post.id)[:5]
     context = {
         'post':post, 
-        'category': category,
         'blog': blog,
     }
     return render(request, "blog/detail.html", context)
+
+def index(request):
+    post = Post.objects.all() if request.user.is_staff else Post.objects.filter(draft=False)
+    paginator = Paginator(post, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'post' : post,
+        'page_obj' : page_obj
+    }
+    return render(request, "blog/index.html", context)
