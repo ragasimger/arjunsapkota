@@ -1,44 +1,33 @@
-from django.shortcuts import render
 from apps.blog.models import Post, Category
-from django.shortcuts import get_object_or_404, redirect, render
-from django.views.generic import ListView
+from django.shortcuts import get_object_or_404, render
 import datetime
 from django.http import Http404
 from django.db.models import Count
 from django.db.models.query_utils import Q
+from django.core.paginator import Paginator
 
+def article_category(request, slug=None):
+    category = Category.objects.get(slug=slug)
+    category = category.category
 
-class ArticleCategory(ListView):
-    
-    context_object_name = 'post'
-    model = Post
-    template_name = "blog/list.html"
-    paginate_by = 3
+    if request.user.is_staff or request.user.is_superuser:
+        category = get_object_or_404(Category, slug = slug)
+        posts = Post.objects.filter(category = category)
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        slug = self.kwargs.get("slug")
-        category = Category.objects.get(slug=slug)
-        category = category.category
+    else:
+        category = get_object_or_404(Category, slug = slug, draft=False)
+        posts = Post.objects.filter(category = category, draft = False)
 
-        if self.request.user.is_staff or self.request.user.is_superuser:
+    paginator = Paginator(posts, 9)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
-            category = get_object_or_404(Category, slug = slug)
-            posts = Post.objects.filter(category = category)
+    context = {
+        'page_obj': page_obj,
+        'category': category
+    }
+    return render(request, "blog/list.html", context)
 
-        else:
-
-            category = get_object_or_404(Category, slug = slug, draft=False)
-            posts = Post.objects.filter(category = category, draft = False)
-
-        count = Post.objects.filter(category = category, draft = False).count()
-
-        context = {
-            'category_name':category,
-            'post' : posts,
-            'count' : count,
-        }
-        return context
 
 def article_detail(request, cat_slug=None, slug=None):
 
@@ -51,17 +40,16 @@ def article_detail(request, cat_slug=None, slug=None):
 
         raise Http404
 
-    category = Category.objects.all()
+    category = Category.objects.all()[:10]
 
     count = Category.objects.filter(draft=False).annotate(
         post_count=Count('post', filter=Q(post__draft=False))
     )
-    blog = Post.objects.filter(draft=False).order_by('-created_date')[:4]
+    blog = Post.objects.filter(draft=False).order_by('created_date').exclude(id=post.id)[:4]
     category = zip(category,count)
     context = {
         'post':post, 
-        'category': category, 
+        'category': category,
         'blog': blog,
     }
-
     return render(request, "blog/detail.html", context)
