@@ -27,6 +27,7 @@ class Post(models.Model):
     title = models.CharField(max_length=160, default='', null=False)
     category = models.ForeignKey(Category, default=None, on_delete=models.CASCADE)
     content = models.TextField(default="")
+    description = models.CharField(max_length=300)
     slug = models.SlugField(max_length=200, unique=True)
     draft = models.BooleanField(default=False)
     created_date = models.DateField(null=True, auto_now_add=True)

@@ -43,7 +43,6 @@ class ArticleCategory(ListView):
 def article_detail(request, cat_slug=None, slug=None):
 
     post = get_object_or_404(Post, category__slug = cat_slug, slug = slug)
-    print(post.category.draft)
     if (
             post.draft or post.created_date > datetime.datetime.now().date() or post.category.draft == True
         ) and (
@@ -57,9 +56,7 @@ def article_detail(request, cat_slug=None, slug=None):
     count = Category.objects.filter(draft=False).annotate(
         post_count=Count('post', filter=Q(post__draft=False))
     )
-
-
-    blog = Post.objects.filter(draft=False).order_by('-created_date')
+    blog = Post.objects.filter(draft=False).order_by('-created_date')[:4]
     category = zip(category,count)
     context = {
         'post':post, 
